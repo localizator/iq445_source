@@ -1,0 +1,8 @@
+global &project
+&project="mt6577_evb"
+
+if version.build()==0x100000  //CVD version
+(
+    debug.PollingTime  100.ms
+)
+

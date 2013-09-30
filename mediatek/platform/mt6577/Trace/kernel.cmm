@@ -1,0 +1,192 @@
+do project.cmm
+; =========================================
+; Please DO NOT modify this section - START
+; =========================================
+;SYSTEM.Reset
+IF "&project"=="mt6577_evb"
+(
+    SYStem.CPU CortexA9MPCoreSMP2
+)
+ELSE
+(
+    SYStem.CPU CortexA9MPCore
+)
+
+System.Option Cflush on    	;flush the cache to avoid data consistency
+SYSTEM.OPTION ENRESET On
+SYSTEM.OPTION TRST On
+SYStem.Option ResBreak OFF
+SYStem.Option WaitReset OFF
+SYStem.JtagClock 5MHz
+
+;R-T Memory Access
+SYSTEM.MULTICORE MEMORYACCESSPORT 0
+SYSTEM.MULTICORE DEBUGACCESSPORT 1
+
+;Setting Core debug register access
+IF "&project"=="mt6577_evb"
+(
+    SYSTEM.MULTICORE COREBASE APB:0x80070000 0x80072000
+)
+ELSE
+(
+    SYSTEM.MULTICORE COREBASE APB:0x80070000
+)
+
+sys.mode go
+wait 500.ms
+sys.mode down
+wait 100.ms
+sys.mode up
+;SYStem.Up
+
+;Register.REset
+
+SETUP.IMASKASM	ON          ; Disbale interrupt during assembly step
+SETUP.IMASKHLL	ON          ; Disbale interrupt during C step
+
+;D.S C15:0x1 0				; Turn off MMU
+
+do wdt.cmm  ; disable hw watchdog timer
+
+Break.SELect Program OnChip ; set_hw_breakpoint_by_def   Jau add
+;Break.SELect Hll OnChip     ; setting attribute of breakpoints
+;Break.SELect Spot OnChip
+Break.SELect Read OnChip
+Break.SELect Write OnChip
+
+;print "loading mt6577 pre-loader"
+;
+;D.LOAD.ELF ../../../../mediatek/source/preloader/bin/preloader_&project.elf /nocode
+;
+;Y.SPATH.RESET ; reset all source path
+;Y.SPATH.SRD 
+;Y.SPATH.SRD ../../../../mediatek/platform/mt6577/preloader/src/init
+;Y.SPATH.SRD ../../../../mediatek/platform/mt6577/preloader/src/drivers
+;Y.SPATH.SRD ../../../../mediatek/platform/mt6577/preloader/src/security
+;Y.SPATH.SRD ../../../../mediatek/platform/mt6577/preloader/src/core
+;Y.SPATH.SRD ../../../../mediatek/custom/&project/preloader
+;Y.SPATH.SRD ../../../../mediatek/platform/mt6577/preloader
+;
+;;go JumpCmd /Onchip
+;;wait !run()
+;
+;Break.Delete 
+;B.set jump
+;go
+;wait !run()
+;***************************************************************************************************
+;print "loading u-boot image"
+;Register.REset
+;D.S C15:0x1 0  ;turn off MMU again
+;
+;d.load.elf ../../../../bootable/bootloader/uboot/u-boot /gnu /nocode  /RELOC .text AT 0x00000000
+;;go stack_setup /Onchip
+;;wait !run()
+;Break.Delete
+;B.set stack_setup
+;d.l
+;go
+;wait !run()
+;
+;print "reload uboot after relocate"
+;Y.SPATH.RESET ; reset all source path
+;Y.SPATH.SRD ../../../../mediatek/platform/mt6577/uboot
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/arch/arm/cpu/arm_cortexa9
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/arch/arm/lib
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/arch/arm/include/asm/arch
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/board/mt6577
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/common
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/drivers/
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/include
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/lib
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/disk
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/fs/fat
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/fs/fdos
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/post
+;Y.SPATH.SRD ../../../../bootable/bootloader/uboot/tools
+;
+;d.load.elf ../../../../bootable/bootloader/uboot/u-boot /gnu /nocode
+;;go  do_nand_boot /Onchip
+;;wait !run()
+;Break.Delete
+;B.set do_nand_boot
+;d.l
+;go
+;wait !run()
+
+;*****************************************************************************************************
+print "load linx kernel image"
+
+Break.Delete 
+sYmbol.RESet
+
+ TrOnchip.Set DABORT OFF        ; used by Linux for page miss!
+ TrOnchip.Set SWI OFF        
+ TrOnchip.Set PABORT OFF        ; used by Linux for page miss!
+ TrOnchip.Set UNDEF OFF         ; used to detect non-existent coprocessor
+ SYStem.Option MMU ON           ; enable space ids to virtual addresses
+
+
+;;disbale interrupt during assembly step
+;SETUP.IMASKASM	ON
+;;disbale interrupt during C step
+;SETUP.IMASKHLL	ON
+
+;; turn off mmu
+;d.s c15:0x1 0
+
+print "loading Linux kernel symbols..."
+
+
+Y.SPATH.RESET ; reset all source path
+Y.SPATH.SRD ../../../../mediatek/platform/mt6577/kernel
+Y.SPATH.SRD ../../../../mediatek/source/kernel
+Y.SPATH.SRD ../../../../mediatek/custom/out/&project/kernel
+Y.SPATH.SRD ../../../../kernel/out/init
+Y.SPATH.SRD ../../../../kernel/out/drivers/
+Y.SPATH.SRD ../../../../kernel/out/include
+Y.SPATH.SRD ../../../../kernel/out/lib
+Y.SPATH.SRD ../../../../kernel/out/fs/fat
+Y.SPATH.SRD ../../../../kernel/out/tools
+
+Data.LOAD.Elf ../../../../kernel/out/vmlinux /gnu /nocode
+
+;go start_kernel /Onchip
+;wait !run()
+B.set start_kernel
+d.l
+go
+
+print "load kernel symbols down....."
+
+task.config Linux
+menu.reprogram  Linux
+menu.reprogram watchdog
+
+B::
+TOOLBAR ON
+STTUSBAR ON
+;WINPAGE.RESET
+
+WINPOS 0.125 0.125 100. 30. 13. 1. W000
+WINTABS 16. 10. 25. 62.
+;WINPAGE.SELECT P000
+
+&var=0xc0000000
+&value=0x00002224
+
+on pbreak gosub
+(
+	if data.long(asd:0xc0000000)!=0x00002224
+	(
+		data.set asd:&var  %long &value
+	)
+)
+
+stop
+end
+
+
+
+

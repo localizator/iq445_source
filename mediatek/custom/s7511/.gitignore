@@ -1,0 +1,16 @@
+/cgen/inc/custom_cfg_module_default.h
+/cgen/inc/custom_cfg_module_file.h
+/common/partition_define.h
+/common/pmt.h
+/kernel/dct/dct/cust_adc.h
+/kernel/dct/dct/cust_eint.h
+/kernel/dct/dct/cust_gpio_boot.h
+/kernel/dct/dct/cust_gpio_usage.h
+/kernel/dct/dct/cust_kpd.h
+/kernel/dct/dct/pmic_drv.c
+/kernel/dct/dct/pmic_drv.h
+/preloader/cust_part.c
+/preloader/custom_emi.c
+/preloader/MTK_Loader_Info.tag
+/uboot/inc/mt65xx_partition.h
+/uboot/partition.c

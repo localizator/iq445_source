@@ -1,0 +1,12 @@
+cgen/inc/custom_cfg_module_default.h
+cgen/inc/custom_cfg_module_file.h
+kernel/dct/dct/cust_adc.h
+kernel/dct/dct/cust_eint.h
+kernel/dct/dct/cust_gpio_boot.h
+kernel/dct/dct/cust_gpio_usage.h
+kernel/dct/dct/cust_kpd.h
+kernel/dct/dct/pmic_drv.c
+kernel/dct/dct/pmic_drv.h
+preloader/custom_emi.c
+preloader/inc/custom_emi.h
+uboot/inc/memory_info.h
